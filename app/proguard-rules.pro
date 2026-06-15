@@ -1,0 +1,4 @@
+-keepattributes *Annotation*, InnerClasses
+-keep,includedescriptorclasses class com.nicolas.budgetcouple.**$$serializer { *; }
+-keepclassmembers class com.nicolas.budgetcouple.** { *** Companion; }
+-keepclasseswithmembers class com.nicolas.budgetcouple.** { kotlinx.serialization.KSerializer serializer(...); }
