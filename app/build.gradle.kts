@@ -48,6 +48,16 @@ android {
     }
 }
 
+// supabase-auth tire transitivement androidx.browser:1.9.0 (pour l'OAuth via
+// Custom Tabs), qui exigerait compileSdk 36 + AGP 8.9.1. On s'authentifie en
+// e-mail/mot de passe, donc on rabat cette transitive sur la derniere stable
+// compatible compileSdk 35 / AGP 8.7.3. A retirer si tu passes un jour en SDK 36.
+configurations.all {
+    resolutionStrategy {
+        force("androidx.browser:browser:1.8.0")
+    }
+}
+
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
