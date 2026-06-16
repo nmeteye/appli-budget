@@ -1,4 +1,2 @@
--keepattributes *Annotation*, InnerClasses
--keep,includedescriptorclasses class com.nicolas.budgetcouple.**$$serializer { *; }
--keepclassmembers class com.nicolas.budgetcouple.** { *** Companion; }
--keepclasseswithmembers class com.nicolas.budgetcouple.** { kotlinx.serialization.KSerializer serializer(...); }
+# Conserver les modeles Room et les data classes utilisees par la serialisation simple.
+-keep class com.nicolas.familybudget.data.local.** { *; }

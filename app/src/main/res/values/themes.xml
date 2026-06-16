@@ -1,3 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.BudgetCouple" parent="android:Theme.Material.Light.NoActionBar" />
+    <!-- Theme framework sans dependance Material Components XML : Compose gere le reste. -->
+    <style name="Theme.FamilyBudget" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    </style>
 </resources>
