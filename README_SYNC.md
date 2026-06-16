@@ -52,10 +52,12 @@ le bouton **Synchroniser**.
 
 ## 4. Points de vigilance / à savoir
 
-- **Versions à confirmer.** `supabase-kt` évolue vite. Le catalogue épingle
-  `supabase = "3.5.0"` et `ktor = "3.1.0"` dans `gradle/libs.versions.toml`.
-  Si le build se plaint d'incompatibilité Ktor, aligne `ktor` sur la version
-  utilisée par la release de supabase-kt choisie.
+- **Versions du toolchain.** Le catalogue épingle `supabase = "3.0.2"` et
+  `ktor = "3.0.1"` dans `gradle/libs.versions.toml`. C'est la dernière release de
+  supabase-kt compilée avec **Kotlin 2.0.21** (la version du projet) : les versions
+  ≥ 3.0.3 passent en Kotlin 2.1+/2.2/2.3 et imposeraient de monter Kotlin, KSP et le
+  plugin Compose. Si tu fais ce saut un jour, tu pourras prendre une supabase-kt
+  plus récente (jusqu'à 3.5.0 pour Kotlin 2.3.0).
 - **Soldes.** Les soldes de comptes ne sont **jamais** synchronisés : ils sont
   recalculés à partir des transactions après chaque pull. C'est volontaire (deux
   appareils qui s'échangeraient des agrégats divergeraient irréversiblement).

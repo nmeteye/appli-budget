@@ -24,11 +24,12 @@ coroutines = "1.9.0"
 kotlinxSerialization = "1.7.3"
 
 # --- Sync multi-utilisateurs (Supabase) ---
-# NOTE: supabase-kt evolue vite. Verifie la derniere version sur
-# https://central.sonatype.com/artifact/io.github.jan-tennert.supabase/bom
-# et aligne `ktor` sur la version de Ktor utilisee par cette release si le build rale.
-supabase = "3.5.0"
-ktor = "3.1.0"
+# supabase-kt 3.0.2 est la derniere release compilee avec Kotlin 2.0.21 (= la version
+# du projet) et un Ktor STABLE (3.0.1). Les releases >= 3.0.3 passent en Kotlin 2.1+,
+# puis 2.2 / 2.3, et exigeraient de monter tout le toolchain Kotlin (KSP, plugin Compose).
+# Si tu montes un jour Kotlin (2.1/2.2/2.3), tu pourras prendre une supabase-kt plus recente.
+supabase = "3.0.2"
+ktor = "3.0.1"
 work = "2.10.0"
 hiltWork = "1.2.0"
 
