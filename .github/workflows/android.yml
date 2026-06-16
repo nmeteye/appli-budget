@@ -1,13 +1,17 @@
-name: Build APK
+name: Android CI
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ "main", "master" ]
+  pull_request:
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -18,18 +22,34 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Setup Gradle
+      # Installe Gradle 8.11.1 et l'ajoute au PATH : evite d'avoir a committer
+      # le binaire gradle-wrapper.jar. La premiere etape genere aussi le wrapper
+      # pour que ./gradlew fonctionne en local apres un premier pull du repo.
+      - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
 
-      - name: Grant execute permission for gradlew
-        run: chmod +x ./gradlew
+      - name: Generate Gradle wrapper
+        run: gradle wrapper --gradle-version 8.11.1
+
+      # Diagnostic : confirme que le build voit bien les secrets, SANS reveler
+      # leur valeur (on n'affiche que la longueur). Si "VIDE", l'APK produit
+      # affichera "Backend non configure".
+      - name: Verifier les secrets Supabase
+        run: |
+          if [ -n "$SUPABASE_URL" ]; then echo "SUPABASE_URL present (longueur ${#SUPABASE_URL})"; else echo "SUPABASE_URL : VIDE"; fi
+          if [ -n "$SUPABASE_ANON_KEY" ]; then echo "SUPABASE_ANON_KEY present (longueur ${#SUPABASE_ANON_KEY})"; else echo "SUPABASE_ANON_KEY : VIDE"; fi
+
+      - name: Run unit tests
+        run: ./gradlew testDebugUnitTest --no-daemon --stacktrace
 
       - name: Build debug APK
         run: ./gradlew assembleDebug --no-daemon --stacktrace
 
-      - name: Upload debug APK
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: budget-couple-debug
-          path: app/build/outputs/apk/debug/app-debug.apk
-          if-no-files-found: error
+          name: family-budget-debug
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: warn
