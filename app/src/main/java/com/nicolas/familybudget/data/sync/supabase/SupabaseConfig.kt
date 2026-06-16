@@ -1,22 +1,31 @@
 package com.nicolas.familybudget.data.sync.supabase
 
+import com.nicolas.familybudget.BuildConfig
+
 /**
- * Configuration du backend Supabase.
+ * Configuration du backend Supabase, injectee a la compilation via BuildConfig
+ * (voir app/build.gradle.kts -> secret()). Les valeurs proviennent, par ordre :
+ *   1. variables d'environnement  -> secrets GitHub Actions en CI ;
+ *   2. local.properties           -> build local (fichier NON versionne) ;
+ *   3. propriete Gradle -P         -> ponctuel.
  *
- * Renseigne l'URL et la cle ANON ("publishable") de ton projet :
- *   Supabase > Project Settings > Data API.
+ * On ne committe donc jamais l'URL ni la cle dans le code source.
  *
- * La cle anon est concue pour etre embarquee dans une app cliente : la securite
- * reelle vient des politiques RLS cote serveur, pas du secret de cette cle.
+ * Renseigne, pour un build local, dans local.properties (a la racine du projet) :
+ *   SUPABASE_URL=https://xxxx.supabase.co
+ *   SUPABASE_ANON_KEY=eyJhbGciOi...
  *
- * Pour ne pas committer ces valeurs, tu peux a la place les injecter via BuildConfig
- * depuis local.properties / les secrets GitHub Actions (voir README_SYNC.md).
+ * Et dans le depot GitHub : Settings > Secrets and variables > Actions, ajoute
+ * les secrets SUPABASE_URL et SUPABASE_ANON_KEY (le workflow les passe au build).
+ *
+ * La cle anon ("publishable") est faite pour etre embarquee dans un client :
+ * la securite reelle vient des politiques RLS cote serveur.
  */
 object SupabaseConfig {
-    const val URL: String = "https://gmhovgndzxqftaxsihju.supabase.co"
-    const val ANON_KEY: String = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdtaG92Z25kenhxZnRheHNpaGp1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MDMxMzksImV4cCI6MjA5NzE3OTEzOX0.4MOaIW1KOhoXNrOzV6ypEJCYcXWVoNcnfHXn-H0_gr0"
+    val URL: String = BuildConfig.SUPABASE_URL
+    val ANON_KEY: String = BuildConfig.SUPABASE_ANON_KEY
 
-    /** Permet de masquer la section de sync tant que le backend n'est pas configure. */
+    /** Masque la section de sync tant que le backend n'est pas renseigne. */
     val isConfigured: Boolean
-        get() = !URL.contains("gmhovgndzxqftaxsihju") && ANON_KEY != "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdtaG92Z25kenhxZnRheHNpaGp1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MDMxMzksImV4cCI6MjA5NzE3OTEzOX0.4MOaIW1KOhoXNrOzV6ypEJCYcXWVoNcnfHXn-H0_gr0"
+        get() = URL.isNotBlank() && ANON_KEY.isNotBlank()
 }

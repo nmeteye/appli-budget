@@ -20,21 +20,30 @@ si la sync n'est pas configurée.
 ## 2. Brancher l'app sur le projet
 
 Récupère l'URL et la clé **anon / publishable** dans
-**Project Settings → Data API**, puis renseigne-les dans :
+**Project Settings → Data API**. Ces valeurs ne se mettent **pas** en dur dans le
+code : elles sont injectées à la compilation via `BuildConfig`. Trois sources, dans
+l'ordre : variable d'environnement → `local.properties` → propriété Gradle `-P`.
 
-`app/src/main/java/com/nicolas/familybudget/data/sync/supabase/SupabaseConfig.kt`
+**Build local** — crée/complète `local.properties` à la racine du projet (ce fichier
+est déjà gitignoré, donc jamais committé) :
 
-```kotlin
-const val URL: String = "https://xxxxxxxx.supabase.co"
-const val ANON_KEY: String = "eyJhbGciOi..."
+```properties
+SUPABASE_URL=https://xxxxxxxx.supabase.co
+SUPABASE_ANON_KEY=eyJhbGciOi...
 ```
 
-La clé anon est faite pour être embarquée dans un client : la sécurité réelle
-vient des politiques **RLS** définies dans le script SQL, pas du secret de la clé.
+**Build GitHub Actions** — dans le dépôt : **Settings → Secrets and variables →
+Actions → New repository secret**, ajoute :
+- `SUPABASE_URL`
+- `SUPABASE_ANON_KEY`
 
-> Variante plus propre (optionnelle) : mettre ces deux valeurs dans
-> `local.properties` (non commité) et les exposer via `buildConfigField`, en
-> alimentant les mêmes clés par des **secrets GitHub Actions** pour la CI.
+Le workflow `.github/workflows/android.yml` les expose au build (bloc `env:` du job),
+donc l'APK produit par la CI embarque les bonnes valeurs **sans** que les secrets
+soient dans Git.
+
+> La clé anon est faite pour être embarquée dans un client : la sécurité réelle vient
+> des politiques **RLS** définies dans le script SQL, pas du secret de la clé. Le fait
+> de passer par des secrets évite surtout de polluer l'historique Git.
 
 ## 3. Utiliser
 
