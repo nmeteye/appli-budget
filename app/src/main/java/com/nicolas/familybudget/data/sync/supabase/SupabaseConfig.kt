@@ -13,10 +13,10 @@ package com.nicolas.familybudget.data.sync.supabase
  * depuis local.properties / les secrets GitHub Actions (voir README_SYNC.md).
  */
 object SupabaseConfig {
-    const val URL: String = "https://VOTRE-PROJET.supabase.co"
-    const val ANON_KEY: String = "VOTRE_CLE_ANON"
+    const val URL: String = "https://gmhovgndzxqftaxsihju.supabase.co"
+    const val ANON_KEY: String = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdtaG92Z25kenhxZnRheHNpaGp1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MDMxMzksImV4cCI6MjA5NzE3OTEzOX0.4MOaIW1KOhoXNrOzV6ypEJCYcXWVoNcnfHXn-H0_gr0"
 
     /** Permet de masquer la section de sync tant que le backend n'est pas configure. */
     val isConfigured: Boolean
-        get() = !URL.contains("VOTRE-PROJET") && ANON_KEY != "VOTRE_CLE_ANON"
+        get() = !URL.contains("gmhovgndzxqftaxsihju") && ANON_KEY != "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdtaG92Z25kenhxZnRheHNpaGp1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MDMxMzksImV4cCI6MjA5NzE3OTEzOX0.4MOaIW1KOhoXNrOzV6ypEJCYcXWVoNcnfHXn-H0_gr0"
 }
