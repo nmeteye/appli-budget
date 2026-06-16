@@ -408,7 +408,7 @@ private fun AddGoalDialog(
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                         modifier = Modifier.menuAnchor().fillMaxWidth(),
                     )
-                    androidx.compose.material3.ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                    ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                         GoalType.entries.forEach { t ->
                             DropdownMenuItem(text = { Text(t.label) }, onClick = { type = t; expanded = false })
                         }
@@ -458,7 +458,7 @@ private fun ImportCsvDialog(
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                         modifier = Modifier.menuAnchor().fillMaxWidth(),
                     )
-                    androidx.compose.material3.ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                    ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                         accounts.forEach { a ->
                             DropdownMenuItem(text = { Text(a.name) }, onClick = { selected = a; expanded = false })
                         }

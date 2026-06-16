@@ -235,7 +235,7 @@ private fun AddTransactionDialog(
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                         modifier = Modifier.menuAnchor().fillMaxWidth(),
                     )
-                    androidx.compose.material3.ExposedDropdownMenu(
+                    ExposedDropdownMenu(
                         expanded = expanded, onDismissRequest = { expanded = false },
                     ) {
                         DropdownMenuItem(
