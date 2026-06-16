@@ -17,8 +17,10 @@ class CategoryRepository @Inject constructor(
 ) {
     fun observeAll(): Flow<List<CategoryEntity>> = dao.observeAll()
     suspend fun all(): List<CategoryEntity> = dao.all()
-    suspend fun save(category: CategoryEntity): Long = dao.upsert(category)
-    suspend fun delete(category: CategoryEntity) = dao.delete(category)
+    suspend fun save(category: CategoryEntity): Long =
+        dao.upsert(category.copy(isDirty = true, updatedAt = System.currentTimeMillis()))
+    suspend fun delete(category: CategoryEntity) =
+        dao.update(category.copy(isDeleted = true, isDirty = true, updatedAt = System.currentTimeMillis()))
 
     /** Insere les categories par defaut au premier lancement seulement. */
     suspend fun seedIfEmpty() {

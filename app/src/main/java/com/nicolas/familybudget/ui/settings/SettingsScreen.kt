@@ -57,6 +57,7 @@ import com.nicolas.familybudget.data.repository.GoalRepository
 import com.nicolas.familybudget.data.repository.TransactionRepository
 import com.nicolas.familybudget.data.sync.BankSyncProvider
 import com.nicolas.familybudget.ui.components.SectionCard
+import com.nicolas.familybudget.ui.sync.SyncSettingsSection
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -263,6 +264,9 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                 }
             }
         }
+
+        item { SyncSettingsSection() }
+
         item { Spacer(Modifier.height(24.dp)) }
     }
 

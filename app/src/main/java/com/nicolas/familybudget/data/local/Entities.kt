@@ -3,6 +3,7 @@ package com.nicolas.familybudget.data.local
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import java.util.UUID
 
 /** Type de compte, avec les produits d'epargne francais courants. */
 enum class AccountType(val label: String, val isLiquidSavings: Boolean = false) {
@@ -48,23 +49,35 @@ enum class GoalType(val label: String) {
 
 enum class MemberRole { ADULT, CHILD }
 
-@Entity(tableName = "accounts")
+@Entity(tableName = "accounts", indices = [Index(value = ["syncId"], unique = true)])
 data class AccountEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val name: String,
     val type: AccountType,
-    /** Solde courant en centimes. */
+    /** Solde courant en centimes. DERIVE : recalcule a partir des transactions,
+     *  jamais synchronise (sinon divergence irreversible entre appareils). */
     val balanceCents: Long = 0,
     /** A qui appartient le compte : "Commun", prenom d'un membre, etc. */
     val ownerLabel: String = "Commun",
     val colorArgb: Int? = null,
     val archived: Boolean = false,
     val createdAt: Long = System.currentTimeMillis(),
+    // --- Metadonnees de synchronisation multi-appareils ---
+    /** Identite stable inter-appareils (le `id` Long reste local). */
+    val syncId: String = UUID.randomUUID().toString(),
+    /** Budget partage auquel ce compte appartient (null = pas encore synchronise). */
+    val budgetId: String? = null,
+    /** Horodatage de la derniere modification, pose par le client (LWW). */
+    val updatedAt: Long = System.currentTimeMillis(),
+    /** true = reste a pousser au serveur. */
+    val isDirty: Boolean = true,
+    /** Tombstone : supprime logiquement (jamais de DELETE physique pour propager). */
+    val isDeleted: Boolean = false,
 )
 
 @Entity(
     tableName = "transactions",
-    indices = [Index("accountId"), Index("categoryId"), Index("dateEpochMillis")]
+    indices = [Index("accountId"), Index("categoryId"), Index("dateEpochMillis"), Index(value = ["syncId"], unique = true)]
 )
 data class TransactionEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
@@ -80,9 +93,15 @@ data class TransactionEntity(
     val transferGroupId: String? = null,
     val source: TransactionSource = TransactionSource.MANUAL,
     val createdAt: Long = System.currentTimeMillis(),
+    // --- Metadonnees de synchronisation multi-appareils ---
+    val syncId: String = UUID.randomUUID().toString(),
+    val budgetId: String? = null,
+    val updatedAt: Long = System.currentTimeMillis(),
+    val isDirty: Boolean = true,
+    val isDeleted: Boolean = false,
 )
 
-@Entity(tableName = "categories")
+@Entity(tableName = "categories", indices = [Index(value = ["syncId"], unique = true)])
 data class CategoryEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val name: String,
@@ -91,6 +110,12 @@ data class CategoryEntity(
     val emoji: String = "",
     /** Budget mensuel d'enveloppe en centimes (0 = pas de plafond). */
     val monthlyBudgetCents: Long = 0,
+    // --- Metadonnees de synchronisation multi-appareils ---
+    val syncId: String = UUID.randomUUID().toString(),
+    val budgetId: String? = null,
+    val updatedAt: Long = System.currentTimeMillis(),
+    val isDirty: Boolean = true,
+    val isDeleted: Boolean = false,
 )
 
 @Entity(tableName = "goals")

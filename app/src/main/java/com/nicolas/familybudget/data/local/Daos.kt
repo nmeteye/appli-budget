@@ -16,16 +16,16 @@ data class CategorySpend(
 
 @Dao
 interface AccountDao {
-    @Query("SELECT * FROM accounts WHERE archived = 0 ORDER BY name")
+    @Query("SELECT * FROM accounts WHERE archived = 0 AND isDeleted = 0 ORDER BY name")
     fun observeActive(): Flow<List<AccountEntity>>
 
-    @Query("SELECT * FROM accounts ORDER BY name")
+    @Query("SELECT * FROM accounts WHERE isDeleted = 0 ORDER BY name")
     fun observeAll(): Flow<List<AccountEntity>>
 
     @Query("SELECT * FROM accounts WHERE id = :id")
     suspend fun byId(id: Long): AccountEntity?
 
-    @Query("SELECT COALESCE(SUM(balanceCents), 0) FROM accounts WHERE archived = 0")
+    @Query("SELECT COALESCE(SUM(balanceCents), 0) FROM accounts WHERE archived = 0 AND isDeleted = 0")
     fun observeNetWorth(): Flow<Long>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -34,23 +34,45 @@ interface AccountDao {
     @Query("UPDATE accounts SET balanceCents = balanceCents + :deltaCents WHERE id = :id")
     suspend fun adjustBalance(id: Long, deltaCents: Long)
 
+    /** Fixe le solde a une valeur absolue (recalcul post-sync). */
+    @Query("UPDATE accounts SET balanceCents = :cents WHERE id = :id")
+    suspend fun setBalance(id: Long, cents: Long)
+
     @Update suspend fun update(account: AccountEntity)
     @Delete suspend fun delete(account: AccountEntity)
+
+    // --- Synchronisation ---
+    @Query("SELECT * FROM accounts WHERE isDirty = 1")
+    suspend fun dirty(): List<AccountEntity>
+
+    @Query("SELECT * FROM accounts WHERE syncId = :syncId LIMIT 1")
+    suspend fun bySyncId(syncId: String): AccountEntity?
+
+    /** Tous les comptes non supprimes : sert a construire la table syncId -> id local. */
+    @Query("SELECT * FROM accounts")
+    suspend fun allRaw(): List<AccountEntity>
+
+    @Query("UPDATE accounts SET isDirty = 0 WHERE syncId IN (:syncIds)")
+    suspend fun markClean(syncIds: List<String>)
+
+    /** Rattache les lignes locales orphelines a un budget (a la creation/jonction). */
+    @Query("UPDATE accounts SET budgetId = :budgetId, isDirty = 1, updatedAt = :ts WHERE budgetId IS NULL")
+    suspend fun attachToBudget(budgetId: String, ts: Long)
 }
 
 @Dao
 interface TransactionDao {
-    @Query("SELECT * FROM transactions ORDER BY dateEpochMillis DESC LIMIT :limit")
+    @Query("SELECT * FROM transactions WHERE isDeleted = 0 ORDER BY dateEpochMillis DESC LIMIT :limit")
     fun observeRecent(limit: Int = 100): Flow<List<TransactionEntity>>
 
-    @Query("SELECT * FROM transactions WHERE accountId = :accountId ORDER BY dateEpochMillis DESC")
+    @Query("SELECT * FROM transactions WHERE accountId = :accountId AND isDeleted = 0 ORDER BY dateEpochMillis DESC")
     fun observeForAccount(accountId: Long): Flow<List<TransactionEntity>>
 
     @Query(
         """
         SELECT categoryId AS categoryId, COALESCE(SUM(amountCents), 0) AS totalCents
         FROM transactions
-        WHERE type = 'EXPENSE' AND dateEpochMillis BETWEEN :from AND :to
+        WHERE type = 'EXPENSE' AND isDeleted = 0 AND dateEpochMillis BETWEEN :from AND :to
         GROUP BY categoryId
         """
     )
@@ -58,13 +80,13 @@ interface TransactionDao {
 
     @Query(
         "SELECT COALESCE(SUM(amountCents), 0) FROM transactions " +
-            "WHERE type = 'INCOME' AND dateEpochMillis BETWEEN :from AND :to"
+            "WHERE type = 'INCOME' AND isDeleted = 0 AND dateEpochMillis BETWEEN :from AND :to"
     )
     fun observeIncomeBetween(from: Long, to: Long): Flow<Long>
 
     @Query(
         "SELECT COALESCE(SUM(amountCents), 0) FROM transactions " +
-            "WHERE type = 'EXPENSE' AND dateEpochMillis BETWEEN :from AND :to"
+            "WHERE type = 'EXPENSE' AND isDeleted = 0 AND dateEpochMillis BETWEEN :from AND :to"
     )
     fun observeExpenseBetween(from: Long, to: Long): Flow<Long>
 
@@ -74,14 +96,34 @@ interface TransactionDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(txs: List<TransactionEntity>): List<Long>
 
+    @Update suspend fun update(tx: TransactionEntity)
+
     @Delete suspend fun delete(tx: TransactionEntity)
+
+    // --- Synchronisation ---
+    @Query("SELECT * FROM transactions WHERE isDirty = 1")
+    suspend fun dirty(): List<TransactionEntity>
+
+    @Query("SELECT * FROM transactions WHERE syncId = :syncId LIMIT 1")
+    suspend fun bySyncId(syncId: String): TransactionEntity?
+
+    @Query("UPDATE transactions SET isDirty = 0 WHERE syncId IN (:syncIds)")
+    suspend fun markClean(syncIds: List<String>)
+
+    /** Solde recalcule d'un compte a partir de ses operations vivantes. */
+    @Query("SELECT COALESCE(SUM(amountCents), 0) FROM transactions WHERE accountId = :accountId AND isDeleted = 0")
+    suspend fun balanceForAccount(accountId: Long): Long
+
+    @Query("UPDATE transactions SET budgetId = :budgetId, isDirty = 1, updatedAt = :ts WHERE budgetId IS NULL")
+    suspend fun attachToBudget(budgetId: String, ts: Long)
 }
 
 @Dao
 interface CategoryDao {
-    @Query("SELECT * FROM categories ORDER BY kind, name")
+    @Query("SELECT * FROM categories WHERE isDeleted = 0 ORDER BY kind, name")
     fun observeAll(): Flow<List<CategoryEntity>>
 
+    /** Toutes les categories (y compris supprimees) : pour resoudre le nom d'anciennes operations. */
     @Query("SELECT * FROM categories")
     suspend fun all(): List<CategoryEntity>
 
@@ -94,7 +136,22 @@ interface CategoryDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(categories: List<CategoryEntity>)
 
+    @Update suspend fun update(category: CategoryEntity)
+
     @Delete suspend fun delete(category: CategoryEntity)
+
+    // --- Synchronisation ---
+    @Query("SELECT * FROM categories WHERE isDirty = 1")
+    suspend fun dirty(): List<CategoryEntity>
+
+    @Query("SELECT * FROM categories WHERE syncId = :syncId LIMIT 1")
+    suspend fun bySyncId(syncId: String): CategoryEntity?
+
+    @Query("UPDATE categories SET isDirty = 0 WHERE syncId IN (:syncIds)")
+    suspend fun markClean(syncIds: List<String>)
+
+    @Query("UPDATE categories SET budgetId = :budgetId, isDirty = 1, updatedAt = :ts WHERE budgetId IS NULL")
+    suspend fun attachToBudget(budgetId: String, ts: Long)
 }
 
 @Dao

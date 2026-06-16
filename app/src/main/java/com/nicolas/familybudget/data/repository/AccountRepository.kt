@@ -15,8 +15,12 @@ class AccountRepository @Inject constructor(
     fun observeNetWorth(): Flow<Long> = dao.observeNetWorth()
 
     suspend fun byId(id: Long) = dao.byId(id)
-    suspend fun save(account: AccountEntity): Long = dao.upsert(account)
-    suspend fun update(account: AccountEntity) = dao.update(account)
-    suspend fun delete(account: AccountEntity) = dao.delete(account)
-    suspend fun archive(account: AccountEntity) = dao.update(account.copy(archived = true))
+    suspend fun save(account: AccountEntity): Long =
+        dao.upsert(account.copy(isDirty = true, updatedAt = System.currentTimeMillis()))
+    suspend fun update(account: AccountEntity) =
+        dao.update(account.copy(isDirty = true, updatedAt = System.currentTimeMillis()))
+    suspend fun delete(account: AccountEntity) =
+        dao.update(account.copy(isDeleted = true, isDirty = true, updatedAt = System.currentTimeMillis()))
+    suspend fun archive(account: AccountEntity) =
+        dao.update(account.copy(archived = true, isDirty = true, updatedAt = System.currentTimeMillis()))
 }

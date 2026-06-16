@@ -102,7 +102,12 @@ class TransactionRepository @Inject constructor(
     }
 
     suspend fun remove(tx: TransactionEntity) {
-        txDao.delete(tx)
+        // Suppression LOGIQUE (tombstone) pour que l'effacement se propage aux
+        // autres appareils. Le solde local est ajuste immediatement pour l'UI ;
+        // il sera de toute facon recalcule lors de la prochaine synchro.
+        txDao.update(
+            tx.copy(isDeleted = true, isDirty = true, updatedAt = System.currentTimeMillis())
+        )
         accountDao.adjustBalance(tx.accountId, -tx.amountCents)
     }
 }
